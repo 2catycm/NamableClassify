@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "namable_classify"
+  site-url: "https://2catycm.github.io/NamableClassify"
+  description: ""
+  repo-branch: main
+  repo-url: "https://github.com/2catycm/NamableClassify"
