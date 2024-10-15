@@ -1,4 +1,6 @@
+runs
 .lr*
+.scale_batch*
 lightning_logs
 data/
 deprecated/

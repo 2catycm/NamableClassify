@@ -1,0 +1,9 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 00_core.ipynb
+      - 00_main.ipynb
+      - 00_utils.ipynb
+      - 011_data_transforms.ipynb
+      - 01_data.ipynb
