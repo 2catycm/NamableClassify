@@ -5,4 +5,12 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://2catycm.github.io',
                 'git_url': 'https://github.com/2catycm/NamableClassify',
                 'lib_path': 'namable_classify'},
-  'syms': {'namable_classify.core': {'namable_classify.core.foo': ('core.html#foo', 'namable_classify/core.py')}}}
+  'syms': { 'namable_classify.core': { 'namable_classify.core.ClassificationTaskConfig': ( 'core.html#classificationtaskconfig',
+                                                                                           'namable_classify/core.py')},
+            'namable_classify.data.transforms': { 'namable_classify.data.transforms.CutoutPIL': ( 'data_transforms.html#cutoutpil',
+                                                                                                  'namable_classify/data/transforms.py'),
+                                                  'namable_classify.data.transforms.CutoutPIL.__call__': ( 'data_transforms.html#cutoutpil.__call__',
+                                                                                                           'namable_classify/data/transforms.py'),
+                                                  'namable_classify.data.transforms.CutoutPIL.__init__': ( 'data_transforms.html#cutoutpil.__init__',
+                                                                                                           'namable_classify/data/transforms.py')},
+            'namable_classify.utils': {}}}
