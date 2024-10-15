@@ -1,3 +1,5 @@
+.lr*
+lightning_logs
 data/
 deprecated/
 _docs/
