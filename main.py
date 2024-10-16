@@ -1,0 +1,1 @@
+from namable_classify import __main__

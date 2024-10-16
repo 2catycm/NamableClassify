@@ -72,6 +72,22 @@ class ClassificationTaskConfig(BaseModel):
     learning_rate: float = 3e-4
 
 # %% ../nbs/00_core.ipynb 9
+@patch
+def see_params_norm(self:nn.Module)->float:
+    params = torch.cat([param.view(-1) for param in self.parameters()])
+    # 计算范数，这里以2-范数为例
+    norm = torch.norm(params, p=2)
+    return norm.item()
+
+@patch
+def see_grad_norm(self:nn.Module)-> float:
+    grads = torch.cat([param.grad.view(-1) for param in self.parameters() if param.grad is not None])
+    # 计算范数，这里以2-范数为例
+    norm = torch.norm(grads, p=2)
+    return norm.item()
+    
+
+# %% ../nbs/00_core.ipynb 10
 import lightning as L
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS, STEP_OUTPUT, OptimizerLRScheduler
 from overrides import override
@@ -103,18 +119,21 @@ class ClassificationTask(L.LightningModule):
         self.example_input_array = torch.Tensor(1, self.cls_model.backbone.config.num_channels, *model_image_size)
         
         # 最后是训练策略
-        self.softmax = nn.Softmax(dim=1)    
+        # self.softmax = nn.Softmax(dim=1)    
+        self.softmax = nn.Identity()
         self.loss = nn.CrossEntropyLoss(label_smoothing=config.label_smoothing)
         # nn.LogSoftmax(dim=1)
         # https://blog.csdn.net/qq_43391414/article/details/118421352 logsoftmax+nll的速度快，但是没有label smoothing
         
         # 评价策略
         self.evaluation_steps_outputs = dict()
+        
+        self.automatic_optimization = False
     
     def compute_model_logits(self, image_tensor:torch.Tensor)-> torch.Tensor:
         return self.cls_model(image_tensor)
     
-    @override
+    # @override
     def forward(self, image_tensor:torch.Tensor, *args, **kwargs)-> torch.Tensor:
         return self.softmax(self.compute_model_logits(image_tensor))
 
@@ -122,16 +141,51 @@ class ClassificationTask(L.LightningModule):
         probs = self(image_tensor)
         # return F.nll_loss(logits, label_tensor)
         return self.loss(probs, label_tensor)
-    
-    @override
+
+    # @override
     def training_step(self, batch, batch_idx=None, *args, **kwargs)-> STEP_OUTPUT:
+        # self.train() # 不必要
+        # opt = self.optimizers(use_pl_optimizer=False)
+        opt = self.optimizers(use_pl_optimizer=True)
+        opt.zero_grad()
+        
         loss = self.forward_loss(*batch)
         self.log("train_loss", loss, prog_bar=True)
+        # print("Loss:", loss.item())
+        # self.manual_backward(loss)
+        loss.backward()
+        self.log("grad_norm", self.see_grad_norm(), prog_bar=True)
+        old_params_norm = self.see_params_norm()
+        
+        self.log("params_norm", old_params_norm, prog_bar=True)
+        # print("Grad Norm:", self.see_grad_norm())
+        # print("Params Norm before step:", self.see_params_norm())
+        # print("Params of cls_model Norm before step:", self.cls_model.see_params_norm())
+        opt.step()
+        # print("Params Norm after step:", self.see_params_norm())
+        # print("Params of cls_model Norm after step:", self.cls_model.see_params_norm())
+        params_norm_delta = self.see_params_norm() - old_params_norm
+        self.log("params_norm_delta", params_norm_delta, prog_bar=True)
+        
+        # print()
+        # print(loss)
         return loss
 
-    @override    
+    # @override    
     def configure_optimizers(self) -> OptimizerLRScheduler:
-        return torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        # return torch.optim.SGD(self.parameters(), lr=self.hparams.learning_rate)
+        # return torch.optim.SGD(self.cls_model.parameters(), lr=self.hparams.learning_rate)
+        # print("Learning Rate:", self.hparams.learning_rate)
+        # return torch.optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        # return torch.optim.AdamW(self.cls_model.parameters(), lr=self.hparams.learning_rate)
+        
+        # optimizer = optim.SGD(self.cls_model.parameters(), lr=self.hparams.learning_rate)
+        # print(len(list(self.parameters())))
+        
+        optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=self.hparams.learning_rate/10, 
+                                                      max_lr=self.hparams.learning_rate)
+        return ([optimizer], [scheduler])
         # return L.AdamW(self.parameters(), lr=self.learning_rate)
 
     # 现在我们已经定义好Training的逻辑了，已经可以跑训练了。然而，除了训练之外，我们需要评测模型的性能。
@@ -162,7 +216,9 @@ class ClassificationTask(L.LightningModule):
         all_label_tensor = np.concatenate(self.evaluation_steps_outputs[f'{stage}_label_tensor'])
         # logger.debug(self.evaluation_steps_outputs[f'{stage}_label_tensor'])
         # logger.debug(all_label_tensor)
-        eval_dict = compute_classification_metrics(all_label_tensor, all_pred_probs, logits_to_prob=False, 
+        eval_dict = compute_classification_metrics(all_label_tensor, all_pred_probs, 
+                                                #    logits_to_prob=False, 
+                                                   logits_to_prob=True, 
                                                 labels=labels)
         eval_dict = {f"{stage}_{k}": v for k,v in eval_dict.items()}
         self.log_dict(eval_dict)
