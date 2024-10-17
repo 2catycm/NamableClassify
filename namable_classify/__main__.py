@@ -10,8 +10,10 @@ from .core import ClassificationTask, ClassificationTaskConfig
 config = ClassificationTaskConfig()
 # config.learning_rate = 1e-1
 # config.learning_rate = 1
-config.learning_rate = 1e-3
-# config.learning_rate = 3e-4
+# config.learning_rate = 1e-3
+# config.learning_rate = 1e-5
+config.learning_rate = 3e-4
+config.experiment_index = 1
 # config.learning_rate = 1e-6
 config.dataset_config.batch_size = 64
 cls_task = ClassificationTask(config)
@@ -24,8 +26,8 @@ import torch
 import lightning as L
 from .utils import runs_path
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
-from lightning.pytorch.callbacks import ModelSummary, StochasticWeightAveraging, DeviceStatsMonitor
-from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger
+from lightning.pytorch.callbacks import ModelSummary, StochasticWeightAveraging, DeviceStatsMonitor, LearningRateMonitor, LearningRateFinder
+from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger, WandbLogger
 
 trainer = L.Trainer(default_root_dir=runs_path, enable_checkpointing=True, 
                     enable_model_summary=True, 
@@ -34,18 +36,32 @@ trainer = L.Trainer(default_root_dir=runs_path, enable_checkpointing=True,
                         # EarlyStopping(monitor="val_loss", mode="min")
                         EarlyStopping(monitor="val_acc1", mode="max", check_finite=True, 
                                       patience=5, 
+                                    #   patience=6, 
                                       check_on_train_epoch_end=False,  # check on validation end
                                       verbose=True),
                         ModelSummary(max_depth=3),
+                        # https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
                         # StochasticWeightAveraging(swa_lrs=1e-2), 
-                        DeviceStatsMonitor(cpu_stats=True)
+                        # DeviceStatsMonitor(cpu_stats=True)
+                        LearningRateMonitor(), 
+                        # LearningRateFinder() # 有奇怪的bug
                                ]
-                    
+                    , max_epochs=15
                     # , gradient_clip_val=1.0, gradient_clip_algorithm="value"
-                    , logger=[TensorBoardLogger(save_dir=runs_path/"tensorboard"), CSVLogger(save_dir=runs_path)]
+                    , logger=[
+                        # TensorBoardLogger(save_dir=runs_path/"tensorboard"),
+                        TensorBoardLogger(save_dir=runs_path),
+                              CSVLogger(save_dir=runs_path), 
+                              WandbLogger(project="namable_classify", name="test")
+                              ]
                     # , profiler="simple"
                     # , fast_dev_run=True
                     # limit_train_batches=10, limit_val_batches=5
                     # strategy="ddp", accelerator="gpu", devices=4
                     )
+
+# %% ../nbs/00_main.ipynb 10
 trainer.fit(cls_task, datamodule=cls_task.lit_data)
+
+# %% ../nbs/00_main.ipynb 11
+trainer.test(cls_task, datamodule=cls_task.lit_data)

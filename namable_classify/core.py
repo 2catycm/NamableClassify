@@ -133,7 +133,7 @@ class ClassificationTask(L.LightningModule):
     def compute_model_logits(self, image_tensor:torch.Tensor)-> torch.Tensor:
         return self.cls_model(image_tensor)
     
-    # @override
+    @override
     def forward(self, image_tensor:torch.Tensor, *args, **kwargs)-> torch.Tensor:
         return self.softmax(self.compute_model_logits(image_tensor))
 
@@ -142,7 +142,7 @@ class ClassificationTask(L.LightningModule):
         # return F.nll_loss(logits, label_tensor)
         return self.loss(probs, label_tensor)
 
-    # @override
+    @override
     def training_step(self, batch, batch_idx=None, *args, **kwargs)-> STEP_OUTPUT:
         # self.train() # 不必要
         # opt = self.optimizers(use_pl_optimizer=False)
@@ -167,11 +167,24 @@ class ClassificationTask(L.LightningModule):
         params_norm_delta = self.see_params_norm() - old_params_norm
         self.log("params_norm_delta", params_norm_delta, prog_bar=True)
         
+        
+        
+        # sch = self.lr_schedulers()
+        # self.log("lr", sch.get_last_lr()[0], prog_bar=True)
+        # # https://www.restack.io/p/pytorch-lightning-answer-get-current-training-step-cat-ai
+        # # https://github.com/Lightning-AI/pytorch-lightning/pull/11599
+        # sch.step(self.global_step/self.trainer.estimated_stepping_batches/self.trainer.max_epochs)
+        
+        # self.log("global_step", self.global_step, prog_bar=True)
+        # # self.log("epoch", self.current_epoch, prog_bar=True)
+        # self.log("stepping_batches_of_one_epoch", self.trainer.estimated_stepping_batches/self.trainer.max_epochs, prog_bar=True)
+        
         # print()
         # print(loss)
         return loss
 
-    # @override    
+
+    @override    
     def configure_optimizers(self) -> OptimizerLRScheduler:
         # return torch.optim.SGD(self.parameters(), lr=self.hparams.learning_rate)
         # return torch.optim.SGD(self.cls_model.parameters(), lr=self.hparams.learning_rate)
@@ -185,7 +198,11 @@ class ClassificationTask(L.LightningModule):
         optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
         scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=self.hparams.learning_rate/10, 
                                                       max_lr=self.hparams.learning_rate)
+        # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.CosineAnnealingWarmRestarts.html
+        # https://www.kaggle.com/code/isbhargav/guide-to-pytorch-learning-rate-scheduling#9.CosineAnnealingWarmRestarts
+        # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
         return ([optimizer], [scheduler])
+        # return ([optimizer], [{"scheduler": scheduler, "interval": "step"}])
         # return L.AdamW(self.parameters(), lr=self.learning_rate)
 
     # 现在我们已经定义好Training的逻辑了，已经可以跑训练了。然而，除了训练之外，我们需要评测模型的性能。
@@ -224,21 +241,27 @@ class ClassificationTask(L.LightningModule):
         self.log_dict(eval_dict)
         self.evaluation_steps_outputs.clear()
 
+    @override
     def on_validation_epoch_start(self):
         return self.on_evaluation_epoch_start(stage="val")
-
+    
+    @override
     def on_test_epoch_start(self):
         return self.on_evaluation_epoch_start(stage="test")
 
+    @override
     def on_validation_epoch_end(self):
         return self.on_evaluation_epoch_end(stage="val")
 
+    @override
     def on_test_epoch_end(self):
         return self.on_evaluation_epoch_end(stage="test")
 
-    def validation_step(self, batch, batch_idx=None):
+    @override
+    def validation_step(self, batch, batch_idx=None, *args, **kwargs):
         return self.evaluation_step(batch, batch_idx, stage="val")
 
-    def test_step(self, batch, batch_idx=None):
+    @override
+    def test_step(self, batch, batch_idx=None, *args, **kwargs):
         return self.evaluation_step(batch, batch_idx, stage="test")
 
