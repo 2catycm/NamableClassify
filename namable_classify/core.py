@@ -70,6 +70,7 @@ class ClassificationTaskConfig(BaseModel):
     cls_model_config: ClassificationModelConfig = ClassificationModelConfig()
     dataset_config: ClassificationDataConfig = ClassificationDataConfig()
     learning_rate: float = 3e-4
+    yuequ:str = "full_finetune"
 
 # %% ../nbs/00_core.ipynb 9
 @patch
@@ -128,7 +129,18 @@ class ClassificationTask(L.LightningModule):
         # 评价策略
         self.evaluation_steps_outputs = dict()
         
-        self.automatic_optimization = False
+        # self.automatic_optimization = False
+        self.automatic_optimization = True
+        
+        # 上面初始化后config有变化，所以需要重新保存一下。
+        self.save_hyperparameters(config.model_dump())
+    
+    @override
+    def on_train_start(self) -> None:
+        # 更新一下最终的超参数
+        self.save_hyperparameters(self.hparams)
+        self.lit_data.save_hyperparameters(self.lit_data.hparams)
+        return super().on_train_start()
     
     def compute_model_logits(self, image_tensor:torch.Tensor)-> torch.Tensor:
         return self.cls_model(image_tensor)
@@ -146,26 +158,27 @@ class ClassificationTask(L.LightningModule):
     def training_step(self, batch, batch_idx=None, *args, **kwargs)-> STEP_OUTPUT:
         # self.train() # 不必要
         # opt = self.optimizers(use_pl_optimizer=False)
-        opt = self.optimizers(use_pl_optimizer=True)
-        opt.zero_grad()
+        # opt = self.optimizers(use_pl_optimizer=True)
+        # opt.zero_grad()
         
         loss = self.forward_loss(*batch)
         self.log("train_loss", loss, prog_bar=True)
         # print("Loss:", loss.item())
         # self.manual_backward(loss)
-        loss.backward()
-        self.log("grad_norm", self.see_grad_norm(), prog_bar=True)
-        old_params_norm = self.see_params_norm()
+        # loss.backward()
+        # self.log("grad_norm", self.see_grad_norm(), prog_bar=True)
+        # old_params_norm = self.see_params_norm()
         
-        self.log("params_norm", old_params_norm, prog_bar=True)
-        # print("Grad Norm:", self.see_grad_norm())
-        # print("Params Norm before step:", self.see_params_norm())
-        # print("Params of cls_model Norm before step:", self.cls_model.see_params_norm())
-        opt.step()
-        # print("Params Norm after step:", self.see_params_norm())
-        # print("Params of cls_model Norm after step:", self.cls_model.see_params_norm())
-        params_norm_delta = self.see_params_norm() - old_params_norm
-        self.log("params_norm_delta", params_norm_delta, prog_bar=True)
+        # self.log("params_norm", old_params_norm, prog_bar=True)
+        
+        # # print("Grad Norm:", self.see_grad_norm())
+        # # print("Params Norm before step:", self.see_params_norm())
+        # # print("Params of cls_model Norm before step:", self.cls_model.see_params_norm())
+        # opt.step()
+        # # print("Params Norm after step:", self.see_params_norm())
+        # # print("Params of cls_model Norm after step:", self.cls_model.see_params_norm())
+        # params_norm_delta = self.see_params_norm() - old_params_norm
+        # self.log("params_norm_delta", params_norm_delta, prog_bar=True)
         
         
         
@@ -196,12 +209,13 @@ class ClassificationTask(L.LightningModule):
         # print(len(list(self.parameters())))
         
         optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
-        scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=self.hparams.learning_rate/10, 
-                                                      max_lr=self.hparams.learning_rate)
+        # scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=self.hparams.learning_rate/10, 
+        #                                               max_lr=self.hparams.learning_rate)
         # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.CosineAnnealingWarmRestarts.html
         # https://www.kaggle.com/code/isbhargav/guide-to-pytorch-learning-rate-scheduling#9.CosineAnnealingWarmRestarts
         # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
-        return ([optimizer], [scheduler])
+        # return ([optimizer], [scheduler])
+        return optimizer
         # return ([optimizer], [{"scheduler": scheduler, "interval": "step"}])
         # return L.AdamW(self.parameters(), lr=self.learning_rate)
 
