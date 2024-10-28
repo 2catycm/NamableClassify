@@ -59,7 +59,7 @@ def ensure_array(x: torch.TensorType | np.ndarray | list):
     else: # list
         return np.array(x)
 
-# %% ../nbs/00_utils.ipynb 9
+# %% ../nbs/00_utils.ipynb 10
 from sklearn.metrics import *
 
 # from scipy.special import softmax
@@ -124,11 +124,11 @@ def compute_classification_metrics(
     # return top_k_res| balance_res| report_dict
     return top_k_res | balance_res
 
-# %% ../nbs/00_utils.ipynb 11
+# %% ../nbs/00_utils.ipynb 12
 def append_dict_list(dict, name, value):
     dict[name] = dict.get(name, []) + [value]
 
-# %% ../nbs/00_utils.ipynb 12
+# %% ../nbs/00_utils.ipynb 13
 def partial_with_self(method, *args, **kwargs):
     def wrapped(self, *additional_args, **additional_kwargs):
         # Combine provided args and kwargs with additional ones

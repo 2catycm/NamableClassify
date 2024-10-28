@@ -135,12 +135,12 @@ class ClassificationTask(L.LightningModule):
         # 上面初始化后config有变化，所以需要重新保存一下。
         self.save_hyperparameters(config.model_dump())
     
-    @override
-    def on_train_start(self) -> None:
-        # 更新一下最终的超参数
-        self.save_hyperparameters(self.hparams)
-        self.lit_data.save_hyperparameters(self.lit_data.hparams)
-        return super().on_train_start()
+    # @override
+    # def on_train_start(self) -> None:
+    #     # 更新一下最终的超参数
+    #     # self.save_hyperparameters(self.hparams)
+    #     # self.lit_data.save_hyperparameters(self.lit_data.hparams)
+    #     return super().on_train_start()
     
     def compute_model_logits(self, image_tensor:torch.Tensor)-> torch.Tensor:
         return self.cls_model(image_tensor)
