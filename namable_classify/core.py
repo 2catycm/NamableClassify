@@ -97,7 +97,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from .utils import print_model_pretty
-from .utils import partial_with_self, append_dict_list, compute_classification_metrics, ensure_array, logger
+from .utils import append_dict_list, ensure_array, logger
+from .metrics import compute_classification_metrics
 import numpy as np
 from typing import Any
 class ClassificationTask(L.LightningModule):

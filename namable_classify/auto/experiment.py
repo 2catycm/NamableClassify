@@ -124,10 +124,10 @@ def objective(trial):
             # 我们的原则是每一个目标超参验证集到最优, 然后再用最优的超参得到的模型(其实应该重新训练一遍)在测试集上测试。
             # 在论文研究的第一阶段，应该调参。时间不够的话
             result_dict[f"{yuequ}-{experiment_index}-val_acc1"] = val_acc1
-            result_dict[f"{yuequ}_{experiment_index}-test_acc1"] = test_acc1
+            result_dict[f"{yuequ}-{experiment_index}-test_acc1"] = test_acc1
         mean_results = [result_dict[f"{yuequ}-{i}-val_acc1"] for i in range(5)]
         result_dict[f"{yuequ}-mean-val_acc1"] = sum(mean_results) / len(mean_results)
-        mean_results = [result_dict[f"{yuequ}_{i}-test_acc1"] for i in range(5)]
+        mean_results = [result_dict[f"{yuequ}-{i}-test_acc1"] for i in range(5)]
         result_dict[f"{yuequ}-mean-test_acc1"] = sum(mean_results) / len(mean_results)
     return result_dict
     
