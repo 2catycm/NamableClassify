@@ -65,12 +65,15 @@ from pydantic import BaseModel
 from .data import ClassificationDataConfig, ClassificationDataModule
 
 class ClassificationTaskConfig(BaseModel):
+    experiment_project: str = "NamableClassify Development" # 为了发表什么论文，正在探索什么IDEA？
+    experiment_task: str = "Development Test" # 为了证明我的IDEA有效，正在做哪个数据集、哪个架构的实验？
     experiment_index: int = 0  # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] 表示是第几次重复实验 # which is also the random seed
     label_smoothing: float = 0.1
     cls_model_config: ClassificationModelConfig = ClassificationModelConfig()
     dataset_config: ClassificationDataConfig = ClassificationDataConfig()
     learning_rate: float = 3e-4
     yuequ:str = "full_finetune"
+    yuequ_pe:float = 0.0
 
 # %% ../nbs/00_core.ipynb 9
 @patch
