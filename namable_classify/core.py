@@ -39,6 +39,9 @@ class HuggingfaceModel(nn.Module):
             raise NotImplementedError("Only linear head is supported for now. ")
         self.config = config
         self.forward_with_hf_image_preprocessor = forward_with_hf_image_preprocessor
+        # 虽然huggingface的dummy inputs很多都是假的不是真的能测试这个模型，但是OpenDelta很矫情，还是认为要有。
+        self.dummy_inputs = self.backbone.dummy_inputs
+        
     
     
     
@@ -122,7 +125,8 @@ class ClassificationTask(L.LightningModule):
         
         # model_image_size:tuple[int, int] = (self.cls_model.image_preprocessor.size['height'], self.cls_model.image_preprocessor.size['width'])
         self.example_input_array = torch.Tensor(1, self.cls_model.backbone.config.num_channels, *model_image_size)
-        self.dummy_inputs = self.example_input_array # for opendelta and huggingface 
+        self.dummy_inputs = self.example_input_array # for opendelta and huggingface
+        self.dummy_inputs_is_correct = True # Used for boguan_yuequ (博观约取) 's auto opendelta 
         # 最后是训练策略
         # self.softmax = nn.Softmax(dim=1)    
         self.softmax = nn.Identity()
