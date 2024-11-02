@@ -4,7 +4,7 @@
 
 # %% auto 0
 __all__ = ['auto_exp_runs_path', 'fixed_meta_parameters', 'study_results', 'backbone_name2pe', 'peft_to_try', 'delta_to_try',
-           'yuequ_to_try', 'study_path', 'sqlite_url', 'study', 'run_with_config', 'objective']
+           'yuequ_to_try', 'postgres_url', 'study', 'run_with_config', 'objective']
 
 # %% ../../nbs/02_auto_experiment.ipynb 4
 import os
@@ -38,6 +38,7 @@ def run_with_config(
     cls_task = ClassificationTask(config)
     cls_task.print_model_pretty()
     AutoYueQuAlgorithm(cls_task, config.yuequ, config.yuequ_pe)
+    # AutoYueQuAlgorithm(cls_task.cls_model, config.yuequ, config.yuequ_pe)
     # Task.init(project_name=config.experiment_project, task_name=config.experiment_task)
     # https://clear.ml/docs/latest/docs/guides/frameworks/pytorch_lightning/pytorch_lightning_example/
 
@@ -61,8 +62,8 @@ def run_with_config(
         # LearningRateFinder() # 有奇怪的bug
         BatchSizeFinder(init_val=32) # 用 "power" 减少调参不确定性; 
     ]
-    if trial is not None:
-        callbacks.append(PyTorchLightningPruningCallback(trial, monitor=tuning_metric))
+    # if trial is not None:
+    #     callbacks.append(PyTorchLightningPruningCallback(trial, monitor=tuning_metric))
 
     logger = [
         TensorBoardLogger(save_dir=auto_exp_runs_path),
@@ -179,12 +180,24 @@ def objective(trial, num_of_repeated_experiments = 5):
         for k, v in single_run_result.items():
             trial.set_user_attr(k, v)
         result_dict|=single_run_result
+        
+        trial.report(single_run_result[f"val_acc1-run{experiment_index}"], experiment_index)
+        if trial.should_prune():
+            # Return the current predicted value instead of raising `TrialPruned`.
+            # This is a workaround to tell the Optuna about the evaluation
+            # results in pruned trials.
+            for metric_name in metric_names:
+                all_runs_results = [result_dict[f"{metric_name}-run{i}"] for i in range(num_of_repeated_experiments)]
+                result_dict[f"{metric_name}-mean"] = sum(all_runs_results) / len(all_runs_results)
+                trial.set_user_attr(f"{metric_name}-mean", result_dict[f"{metric_name}-mean"])
+            trial.set_user_attr(f"num_of_repeated", experiment_index+1)
+            return result_dict["val_acc1-mean"]
     # 计算一下平均数
     for metric_name in metric_names:
         all_runs_results = [result_dict[f"{metric_name}-run{i}"] for i in range(num_of_repeated_experiments)]
         result_dict[f"{metric_name}-mean"] = sum(all_runs_results) / len(all_runs_results)
         trial.set_user_attr(f"{metric_name}-mean", result_dict[f"{metric_name}-mean"])
-        
+    trial.set_user_attr(f"num_of_repeated", num_of_repeated_experiments)
     return result_dict["val_acc1-mean"]
     
 
@@ -192,26 +205,31 @@ def objective(trial, num_of_repeated_experiments = 5):
 from ..utils import runs_path
 from optuna.samplers import *
 from optuna.pruners import *
-study_path = auto_exp_runs_path / "optuna_studies.db"
-sqlite_url = f"sqlite:///{study_path}"
+# study_path = auto_exp_runs_path / "optuna_studies.db"
+# sqlite_url = f"sqlite:///{study_path}"
 # sqlite_url = f"sqlite://{study_path}"
 # TODO 
-# postgres_url = 'postgresql://ycm:password@localhost/namable_classify'
+postgres_url = 'postgresql+psycopg2://ycm:password@localhost:5432/namable_classify'
+# pip install psycopg2-binary 
+# postgres_url = 'postgresql://myuser:mypassword@localhost/mydatabase'
 # TODO safety
 study = optuna.create_study(
     study_name="peft baselines benchmark", 
-    storage=sqlite_url, 
-    # storage=postgres_url, 
+    # storage=sqlite_url, 
+    storage=postgres_url, 
     load_if_exists=True, 
     direction="maximize", 
     # https://pub.aimind.so/a-deep-dive-in-optunas-advance-features-2e495e71435c
     # sampler=GPSampler(seed=42), 
-    sampler=TPESampler(seed=42), 
-    pruner=HyperbandPruner()
+    # sampler=TPESampler(seed=42), 
+    # sampler=TPESampler(), 
+    sampler=CmaEsSampler(), 
+    # pruner=HyperbandPruner()
+    pruner=WilcoxonPruner()
     # CmaEsSampler(seed=42),  我们实验数量应该小于1000
     # WilcoxonPruner(min_n_trials=10) # 不适合这个，这个 immediate 是fold的情况
 )
-study.set_user_attr("contributors", ["叶璨铭"])
+study.set_user_attr("contributors", ["Ye Canming"])
 study.set_user_attr("fixed_meta_parameters", fixed_meta_parameters.json())
 # 晚点再看
 # https://optuna-integration.readthedocs.io/en/stable/reference/generated/optuna_integration.MLflowCallback.html

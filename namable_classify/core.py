@@ -118,11 +118,11 @@ class ClassificationTask(L.LightningModule):
         self.cls_model:HuggingfaceModel = config.cls_model_config.get_cls_model()
         
         # 现在需要更新数据
-        self.lit_data.set_transform_from_hf_image_preprocessor(hf_image_preprocessor=self.cls_model.image_preprocessor)
+        model_image_size:tuple[int, int] = self.lit_data.set_transform_from_hf_image_preprocessor(hf_image_preprocessor=self.cls_model.image_preprocessor)
         
-        model_image_size:tuple[int, int] = (self.cls_model.image_preprocessor.size['height'], self.cls_model.image_preprocessor.size['width'])
+        # model_image_size:tuple[int, int] = (self.cls_model.image_preprocessor.size['height'], self.cls_model.image_preprocessor.size['width'])
         self.example_input_array = torch.Tensor(1, self.cls_model.backbone.config.num_channels, *model_image_size)
-        
+        self.dummy_inputs = self.example_input_array # for opendelta and huggingface 
         # 最后是训练策略
         # self.softmax = nn.Softmax(dim=1)    
         self.softmax = nn.Identity()

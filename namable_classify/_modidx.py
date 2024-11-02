@@ -88,4 +88,5 @@ d = { 'settings': { 'branch': 'main',
                                         'namable_classify.utils.nn.Module.print_model_pretty': ( 'utils.html#nn.module.print_model_pretty',
                                                                                                  'namable_classify/utils.py'),
                                         'namable_classify.utils.nn.Module.print_trainable_parameters': ( 'utils.html#nn.module.print_trainable_parameters',
-                                                                                                         'namable_classify/utils.py')}}}
+                                                                                                         'namable_classify/utils.py'),
+                                        'namable_classify.utils.print': ('utils.html#print', 'namable_classify/utils.py')}}}

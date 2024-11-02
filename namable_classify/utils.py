@@ -64,7 +64,11 @@ richuru.install(rich_console=rich_console,
 # %% ../nbs/00_utils.ipynb 13
 from loguru import logger
 original_print = print
-print = lambda *args, **kwargs: logger.info(*args, **kwargs)
+# print = lambda *args, **kwargs: logger.info(*args, **kwargs)
+def print(*args, **kwargs):
+    if len(args)==0 and len(kwargs) == 0:
+        logger.info('')
+    logger.info(*args, **kwargs)
 
 # %% ../nbs/00_utils.ipynb 19
 from fastcore.basics import patch
@@ -91,11 +95,11 @@ def inspect_model_parameters(model:nn.Module):
 
 @patch
 def num_of_total_parameters(model:nn.Module):
-    return inspect_model_parameters(model)[1]
+    return (model).inspect_model_parameters()[1]
 
 @patch
 def num_of_trainable_parameters(model:nn.Module):
-    return inspect_model_parameters(model)[0]
+    return (model).inspect_model_parameters()[0]
 
 @patch
 def print_trainable_parameters(model:nn.Module):
