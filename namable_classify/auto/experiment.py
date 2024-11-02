@@ -12,7 +12,7 @@ os.environ['HF_ENDPOINT'] = "https://hf-mirror.com"
 
 # %% ../../nbs/02_auto_experiment.ipynb 5
 from ..core import ClassificationTask, ClassificationTaskConfig
-from boguan_yuequ.auto import AutoYueQuAlgorithm
+from boguan_yuequ.auto.nucleus import AutoYueQuAlgorithm
 import lightning as L
 from ..utils import runs_path
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
@@ -58,7 +58,7 @@ def run_with_config(
         # https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/
         # StochasticWeightAveraging(swa_lrs=1e-2),
         # DeviceStatsMonitor(cpu_stats=True)
-        LearningRateMonitor(),
+        # LearningRateMonitor(),
         # LearningRateFinder() # 有奇怪的bug
         BatchSizeFinder(init_val=32) # 用 "power" 减少调参不确定性; 
     ]
@@ -128,9 +128,12 @@ backbone_name2pe = {backbone_name:pe for pe, backbone_name in zip(pe_list_tiny_f
 
 # %% ../../nbs/02_auto_experiment.ipynb 14
 # 需要跑哪些算法呢？
-from boguan_yuequ.auto import huggingface_peft_budget_config_key, thu_nlp_opendelta_budget_config_key
+# from boguan_yuequ.auto import huggingface_peft_budget_config_key, thu_nlp_opendelta_budget_config_key
+from boguan_yuequ.auto.integrations.peft import huggingface_peft_budget_config_key
+from boguan_yuequ.auto.integrations.opendelta import thunlp_opendelta_budget_config_key
+
 peft_to_try = [k.name for k in huggingface_peft_budget_config_key.keys()]
-delta_to_try = [k for k in thu_nlp_opendelta_budget_config_key.keys() if k.upper() not in peft_to_try]
+delta_to_try = [k for k in thunlp_opendelta_budget_config_key.keys() if k.upper() not in peft_to_try]
 yuequ_to_try = peft_to_try + delta_to_try
 
 # %% ../../nbs/02_auto_experiment.ipynb 18
@@ -214,7 +217,8 @@ postgres_url = 'postgresql+psycopg2://ycm:password@localhost:5432/namable_classi
 # postgres_url = 'postgresql://myuser:mypassword@localhost/mydatabase'
 # TODO safety
 study = optuna.create_study(
-    study_name="peft baselines benchmark", 
+    # study_name="peft baselines benchmark",  # old version
+    study_name="peft baselines benchmark 11.3", 
     # storage=sqlite_url, 
     storage=postgres_url, 
     load_if_exists=True, 
