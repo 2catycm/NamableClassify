@@ -4,7 +4,8 @@
 
 # %% auto 0
 __all__ = ['auto_exp_runs_path', 'fixed_meta_parameters', 'study_results', 'backbone_name2pe', 'peft_to_try', 'delta_to_try',
-           'yuequ_to_try', 'postgres_url', 'study', 'run_with_config', 'objective']
+           'yuequ_to_try', 'username', 'password', 'host', 'port', 'database_name', 'postgres_url', 'study',
+           'run_with_config', 'objective']
 
 # %% ../../nbs/02_auto_experiment.ipynb 4
 import os
@@ -212,10 +213,17 @@ from optuna.pruners import *
 # sqlite_url = f"sqlite:///{study_path}"
 # sqlite_url = f"sqlite://{study_path}"
 # TODO 
-postgres_url = 'postgresql+psycopg2://ycm:password@localhost:5432/namable_classify'
+
+username = 'ycm'
+password = 'password'
+# host = 'localhost'
+host = '10.103.10.53'
+port = 5432
+database_name = 'namable_classify'
+postgres_url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database_name}'
 # pip install psycopg2-binary 
 # postgres_url = 'postgresql://myuser:mypassword@localhost/mydatabase'
-# TODO safety
+# TODO safety and privacy
 study = optuna.create_study(
     # study_name="peft baselines benchmark",  # old version
     study_name="peft baselines benchmark 11.3", 
