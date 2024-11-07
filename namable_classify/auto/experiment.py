@@ -142,6 +142,10 @@ yuequ_to_try = peft_to_try + delta_to_try
 # 这里只跑baseline
 from boguan_yuequ.benchmarking import pe_list_tiny_for_all_size, backbone_names
 import optuna
+from ..utils import logger
+from rich.prompt import Prompt
+
+import optuna.exceptions
 
 def objective(trial, num_of_repeated_experiments = 5):
     # TODO 对每一个目标超参数 分开去做？ grid search
@@ -170,10 +174,23 @@ def objective(trial, num_of_repeated_experiments = 5):
     for experiment_index in range(num_of_repeated_experiments):
         meta_parameters.experiment_index = experiment_index
         # 当我们选定 experiment_index 之后，就不要随机建议参数了，现在我们元参数保持一样，重复5次随机实验。
-
-        val_result, test_result = run_with_config(
-            meta_parameters, trial, "val_acc1", "max"
-        )
+        try:
+            val_result, test_result = run_with_config(
+                meta_parameters, trial, "val_acc1", "max"
+            )
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"Error in experiment {experiment_index}, May be you can\n"
+                         "1. Stop the optuna study and you debug and fix the buggy code. "
+                         "2. Searched optuna trial is invalid as an input, so just prune this trial and continue. "
+                         )
+            choice = Prompt.ask("What should we do now?",
+                                choices=["1", "2"], default="1")
+            if choice == "1":
+                raise e
+            else:
+                raise optuna.exceptions.TrialPruned()
+            
         # 注意不要用 test_acc1 调参。
         # 我们的原则是每一个目标超参验证集到最优, 然后再用最优的超参得到的模型(其实应该重新训练一遍)在测试集上测试。
         # 在论文研究的第一阶段，应该调参。时间不够的话
@@ -205,7 +222,7 @@ def objective(trial, num_of_repeated_experiments = 5):
     return result_dict["val_acc1-mean"]
     
 
-# %% ../../nbs/02_auto_experiment.ipynb 19
+# %% ../../nbs/02_auto_experiment.ipynb 21
 from ..utils import runs_path
 from optuna.samplers import *
 from optuna.pruners import *
@@ -226,7 +243,8 @@ postgres_url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{data
 # TODO safety and privacy
 study = optuna.create_study(
     # study_name="peft baselines benchmark",  # old version
-    study_name="peft baselines benchmark 11.3", 
+    # study_name="peft baselines benchmark 11.3", 
+    study_name="peft baselines benchmark 11.7", 
     # storage=sqlite_url, 
     storage=postgres_url, 
     load_if_exists=True, 
@@ -235,7 +253,8 @@ study = optuna.create_study(
     # sampler=GPSampler(seed=42), 
     # sampler=TPESampler(seed=42), 
     # sampler=TPESampler(), 
-    sampler=CmaEsSampler(), 
+    # https://github.com/optuna/optuna/issues/1647
+    sampler=CmaEsSampler(consider_pruned_trials = True), 
     # pruner=HyperbandPruner()
     pruner=WilcoxonPruner()
     # CmaEsSampler(seed=42),  我们实验数量应该小于1000
@@ -246,5 +265,5 @@ study.set_user_attr("fixed_meta_parameters", fixed_meta_parameters.json())
 # 晚点再看
 # https://optuna-integration.readthedocs.io/en/stable/reference/generated/optuna_integration.MLflowCallback.html
 
-# %% ../../nbs/02_auto_experiment.ipynb 20
+# %% ../../nbs/02_auto_experiment.ipynb 22
 study.optimize(objective, n_trials=100)
