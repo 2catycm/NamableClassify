@@ -7,3 +7,7 @@ website:
       - 00_utils.ipynb
       - 011_data_transforms.ipynb
       - 01_data.ipynb
+      - 021_auto_run.ipynb
+      - 02_auto_exp_fullfinetune.ipynb
+      - 02_auto_experiment.ipynb
+      - 03_metrics.ipynb

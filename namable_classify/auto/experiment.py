@@ -24,6 +24,9 @@ from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger, WandbLogger
 # from clearml import Task
 import optuna
 from optuna.integration import PyTorchLightningPruningCallback
+from lightning.pytorch.loggers import MLFlowLogger
+from ..utils import logger
+import torch
 
 auto_exp_runs_path = runs_path / "auto_experiment"
 auto_exp_runs_path.mkdir(exist_ok=True, parents=True)
@@ -35,6 +38,7 @@ def run_with_config(
     tuning_metric="val_acc1",  # Seriously, 为了学术诚信规范，我们AI科研者不能用 "test_acc1" 来调参。
     tuning_mode="max",
 ):
+    logger.info(f"running with config: {config}")
     L.seed_everything(config.experiment_index)
     cls_task = ClassificationTask(config)
     cls_task.print_model_pretty()
@@ -61,33 +65,54 @@ def run_with_config(
         # DeviceStatsMonitor(cpu_stats=True)
         # LearningRateMonitor(),
         # LearningRateFinder() # 有奇怪的bug
-        BatchSizeFinder(init_val=32) # 用 "power" 减少调参不确定性; 
+        # BatchSizeFinder(init_val=32) # 用 "power" 减少调参不确定性; 
     ]
-    # if trial is not None:
-    #     callbacks.append(PyTorchLightningPruningCallback(trial, monitor=tuning_metric))
+    if trial is not None:
+        callbacks.append(PyTorchLightningPruningCallback(trial, monitor=tuning_metric))
 
-    logger = [
+    lightning_loggers = [
         TensorBoardLogger(save_dir=auto_exp_runs_path),
         CSVLogger(save_dir=auto_exp_runs_path),
-        WandbLogger(project=config.experiment_project, name=config.experiment_task),
+        MLFlowLogger(experiment_name=f"{config.experiment_project}/{config.experiment_task}", 
+                    #  .replace("_", "-").replace(" ", "-"), 
+                     tracking_uri="http://10.103.10.55:5000")
+        # WandbLogger(project=config.experiment_project, name=config.experiment_task),
     ]
-
+    
+    torch.set_float32_matmul_precision("high") # 尝试用 TF32
     trainer = L.Trainer(
         default_root_dir=auto_exp_runs_path,
         enable_checkpointing=True,
         enable_model_summary=True,
         num_sanity_val_steps=2,  # 防止 val 在训了好久train才发现崩溃
         callbacks=callbacks
-        # , max_epochs=15
+        , max_epochs=30 
         # , gradient_clip_val=1.0, gradient_clip_algorithm="value"
         ,
-        logger=logger,
+        logger=lightning_loggers,
         # , profiler="simple"
         # , fast_dev_run=True
         # limit_train_batches=10, limit_val_batches=5
         # strategy="ddp", accelerator="gpu", devices=4
+        accelerator="gpu", devices=1, # 实验并行优于数据并行，尽量单卡训练
+        # accelerator="gpu", devices=8, # 实验并行优于数据并行，尽量单卡训练
+        # precision=16 
+        # strategy="ddp"
     )
+    # batch size 和 learning rate
+    from lightning.pytorch.tuner import Tuner
+    tuner = Tuner(trainer)
+    found_batch_size = tuner.scale_batch_size(cls_task, datamodule=cls_task.lit_data, 
+                                        #   mode='binsearch', 
+                                          mode='power', 
+                                          init_val=64)
+    cls_task.hparams.batch_size = found_batch_size = 64 * 8
+    linear_lr_scale = found_batch_size / 64
+    # linear_lr_scale *= 8 # 多卡训练
+    cls_task.hparams.learning_rate = config.learning_rate * linear_lr_scale
+    logger.info(f"original learning rate: {config.learning_rate}, linear lr scale: {linear_lr_scale}, learning rate: {cls_task.hparams.learning_rate}")
 
+    logger.info(f"actual hyperparameters: {cls_task.hparams}")
     trainer.fit(cls_task, datamodule=cls_task.lit_data)
     val_result = trainer.validate(cls_task, datamodule=cls_task.lit_data)
     test_result = trainer.test(cls_task, datamodule=cls_task.lit_data)
@@ -100,7 +125,8 @@ def run_with_config(
 from ..core import ClassificationModelConfig, ClassificationTaskConfig, ClassificationDataConfig
 fixed_meta_parameters = ClassificationTaskConfig(
     experiment_project = "Homogeneous dwarf model is all you need for tuning pretrained giant model.", 
-    experiment_name = "Auto experiment", 
+    # experiment_name = "Auto experiment", 
+    experiment_task = "Auto experiment Stage 1 (single run, short epoches)", 
     label_smoothing=0.1,  # 未必固定。
     cls_model_config=ClassificationModelConfig(
         # checkpoint = "google/vit-base-patch16-224-in21k"
@@ -165,7 +191,9 @@ def objective(trial, num_of_repeated_experiments = 5):
     # 接下来是无关变量
 # f"{yuequ}-learning_rate"
 
-    meta_parameters.learning_rate = trial.suggest_float(f"learning_rate", 1e-5, 1e-1, log=True)
+    # meta_parameters.learning_rate = trial.suggest_float(f"learning_rate", 1e-5, 1e-1, log=True)
+    # meta_parameters.learning_rate = trial.suggest_float(f"learning_rate", 1e-5, 1e-2, log=True) # 正则化，建议的是Batch Size=64的学习率
+    meta_parameters.learning_rate = trial.suggest_float(f"learning_rate", 1e-4, 4e-2, log=True) # 正则化，建议的是Batch Size=64的学习率
     
     result_dict = dict()
 
@@ -203,16 +231,16 @@ def objective(trial, num_of_repeated_experiments = 5):
         result_dict|=single_run_result
         
         trial.report(single_run_result[f"val_acc1-run{experiment_index}"], experiment_index)
-        if trial.should_prune():
-            # Return the current predicted value instead of raising `TrialPruned`.
-            # This is a workaround to tell the Optuna about the evaluation
-            # results in pruned trials.
-            for metric_name in metric_names:
-                all_runs_results = [result_dict[f"{metric_name}-run{i}"] for i in range(num_of_repeated_experiments)]
-                result_dict[f"{metric_name}-mean"] = sum(all_runs_results) / len(all_runs_results)
-                trial.set_user_attr(f"{metric_name}-mean", result_dict[f"{metric_name}-mean"])
-            trial.set_user_attr(f"num_of_repeated", experiment_index+1)
-            return result_dict["val_acc1-mean"]
+        # if trial.should_prune():
+        #     # Return the current predicted value instead of raising `TrialPruned`.
+        #     # This is a workaround to tell the Optuna about the evaluation
+        #     # results in pruned trials.
+        #     for metric_name in metric_names:
+        #         all_runs_results = [result_dict[f"{metric_name}-run{i}"] for i in range(num_of_repeated_experiments)]
+        #         result_dict[f"{metric_name}-mean"] = sum(all_runs_results) / len(all_runs_results)
+        #         trial.set_user_attr(f"{metric_name}-mean", result_dict[f"{metric_name}-mean"])
+        #     trial.set_user_attr(f"num_of_repeated", experiment_index+1)
+        #     return result_dict["val_acc1-mean"]
     # 计算一下平均数
     for metric_name in metric_names:
         all_runs_results = [result_dict[f"{metric_name}-run{i}"] for i in range(num_of_repeated_experiments)]
@@ -222,7 +250,7 @@ def objective(trial, num_of_repeated_experiments = 5):
     return result_dict["val_acc1-mean"]
     
 
-# %% ../../nbs/02_auto_experiment.ipynb 21
+# %% ../../nbs/02_auto_experiment.ipynb 22
 from ..utils import runs_path
 from optuna.samplers import *
 from optuna.pruners import *
@@ -255,8 +283,8 @@ study = optuna.create_study(
     # sampler=TPESampler(), 
     # https://github.com/optuna/optuna/issues/1647
     sampler=CmaEsSampler(consider_pruned_trials = True), 
-    # pruner=HyperbandPruner()
-    pruner=WilcoxonPruner()
+    pruner=HyperbandPruner()
+    # pruner=WilcoxonPruner()
     # CmaEsSampler(seed=42),  我们实验数量应该小于1000
     # WilcoxonPruner(min_n_trials=10) # 不适合这个，这个 immediate 是fold的情况
 )
@@ -265,5 +293,7 @@ study.set_user_attr("fixed_meta_parameters", fixed_meta_parameters.json())
 # 晚点再看
 # https://optuna-integration.readthedocs.io/en/stable/reference/generated/optuna_integration.MLflowCallback.html
 
-# %% ../../nbs/02_auto_experiment.ipynb 22
-study.optimize(objective, n_trials=100)
+# %% ../../nbs/02_auto_experiment.ipynb 23
+# study.optimize(objective, n_trials=100)
+study.optimize(lambda trial: objective(trial, num_of_repeated_experiments=1), 
+               n_trials=100)
