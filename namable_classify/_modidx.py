@@ -6,87 +6,97 @@ d = { 'settings': { 'branch': 'main',
                 'git_url': 'https://github.com/2catycm/NamableClassify',
                 'lib_path': 'namable_classify'},
   'syms': { 'namable_classify.auto.examples.full_finetune': {},
-            'namable_classify.auto.experiment': {},
+            'namable_classify.auto.experiment.infra': {},
+            'namable_classify.auto.experiment.mutiple': {},
+            'namable_classify.auto.experiment.single': {},
             'namable_classify.auto.run': {},
-            'namable_classify.core': { 'namable_classify.core.ClassificationModelConfig': ( 'core.html#classificationmodelconfig',
-                                                                                            'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationModelConfig.get_cls_model': ( 'core.html#classificationmodelconfig.get_cls_model',
-                                                                                                          'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask': ( 'core.html#classificationtask',
-                                                                                     'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.__init__': ( 'core.html#classificationtask.__init__',
-                                                                                              'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.compute_model_logits': ( 'core.html#classificationtask.compute_model_logits',
-                                                                                                          'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.configure_optimizers': ( 'core.html#classificationtask.configure_optimizers',
-                                                                                                          'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.evaluation_step': ( 'core.html#classificationtask.evaluation_step',
-                                                                                                     'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.forward': ( 'core.html#classificationtask.forward',
-                                                                                             'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.forward_loss': ( 'core.html#classificationtask.forward_loss',
-                                                                                                  'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_evaluation_epoch_end': ( 'core.html#classificationtask.on_evaluation_epoch_end',
-                                                                                                             'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_evaluation_epoch_start': ( 'core.html#classificationtask.on_evaluation_epoch_start',
-                                                                                                               'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_test_epoch_end': ( 'core.html#classificationtask.on_test_epoch_end',
-                                                                                                       'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_test_epoch_start': ( 'core.html#classificationtask.on_test_epoch_start',
-                                                                                                         'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_validation_epoch_end': ( 'core.html#classificationtask.on_validation_epoch_end',
-                                                                                                             'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.on_validation_epoch_start': ( 'core.html#classificationtask.on_validation_epoch_start',
-                                                                                                               'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.test_step': ( 'core.html#classificationtask.test_step',
-                                                                                               'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.training_step': ( 'core.html#classificationtask.training_step',
-                                                                                                   'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTask.validation_step': ( 'core.html#classificationtask.validation_step',
-                                                                                                     'namable_classify/core.py'),
-                                       'namable_classify.core.ClassificationTaskConfig': ( 'core.html#classificationtaskconfig',
-                                                                                           'namable_classify/core.py'),
-                                       'namable_classify.core.HuggingfaceModel': ('core.html#huggingfacemodel', 'namable_classify/core.py'),
-                                       'namable_classify.core.HuggingfaceModel.__init__': ( 'core.html#huggingfacemodel.__init__',
-                                                                                            'namable_classify/core.py'),
-                                       'namable_classify.core.HuggingfaceModel.forward': ( 'core.html#huggingfacemodel.forward',
-                                                                                           'namable_classify/core.py'),
-                                       'namable_classify.core.nn.Module.see_grad_norm': ( 'core.html#nn.module.see_grad_norm',
-                                                                                          'namable_classify/core.py'),
-                                       'namable_classify.core.nn.Module.see_params_norm': ( 'core.html#nn.module.see_params_norm',
-                                                                                            'namable_classify/core.py')},
             'namable_classify.data.transforms': { 'namable_classify.data.transforms.CutoutPIL': ( 'data_transforms.html#cutoutpil',
                                                                                                   'namable_classify/data/transforms.py'),
                                                   'namable_classify.data.transforms.CutoutPIL.__call__': ( 'data_transforms.html#cutoutpil.__call__',
                                                                                                            'namable_classify/data/transforms.py'),
                                                   'namable_classify.data.transforms.CutoutPIL.__init__': ( 'data_transforms.html#cutoutpil.__init__',
                                                                                                            'namable_classify/data/transforms.py')},
+            'namable_classify.help': {},
+            'namable_classify.infra': {},
             'namable_classify.metrics': { 'namable_classify.metrics.compute_classification_metrics': ( 'metrics.html#compute_classification_metrics',
                                                                                                        'namable_classify/metrics.py')},
-            'namable_classify.utils': { 'namable_classify.utils.MuteWarnings': ('utils.html#mutewarnings', 'namable_classify/utils.py'),
-                                        'namable_classify.utils.MuteWarnings.__enter__': ( 'utils.html#mutewarnings.__enter__',
-                                                                                           'namable_classify/utils.py'),
-                                        'namable_classify.utils.MuteWarnings.__exit__': ( 'utils.html#mutewarnings.__exit__',
-                                                                                          'namable_classify/utils.py'),
-                                        'namable_classify.utils.MuteWarnings.mute': ( 'utils.html#mutewarnings.mute',
-                                                                                      'namable_classify/utils.py'),
-                                        'namable_classify.utils.MuteWarnings.resume': ( 'utils.html#mutewarnings.resume',
-                                                                                        'namable_classify/utils.py'),
-                                        'namable_classify.utils.append_dict_list': ( 'utils.html#append_dict_list',
-                                                                                     'namable_classify/utils.py'),
-                                        'namable_classify.utils.default_on_exception': ( 'utils.html#default_on_exception',
-                                                                                         'namable_classify/utils.py'),
-                                        'namable_classify.utils.ensure_array': ('utils.html#ensure_array', 'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.inspect_model_parameters': ( 'utils.html#nn.module.inspect_model_parameters',
-                                                                                                       'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.model_rich_tree': ( 'utils.html#nn.module.model_rich_tree',
-                                                                                              'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.num_of_total_parameters': ( 'utils.html#nn.module.num_of_total_parameters',
-                                                                                                      'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.num_of_trainable_parameters': ( 'utils.html#nn.module.num_of_trainable_parameters',
-                                                                                                          'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.print_model_pretty': ( 'utils.html#nn.module.print_model_pretty',
-                                                                                                 'namable_classify/utils.py'),
-                                        'namable_classify.utils.nn.Module.print_trainable_parameters': ( 'utils.html#nn.module.print_trainable_parameters',
-                                                                                                         'namable_classify/utils.py'),
-                                        'namable_classify.utils.print': ('utils.html#print', 'namable_classify/utils.py')}}}
+            'namable_classify.nucleus': { 'namable_classify.nucleus.ClassificationModelConfig': ( 'nucleus (classification core '
+                                                                                                  'api).html#classificationmodelconfig',
+                                                                                                  'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationModelConfig.get_cls_model': ( 'nucleus (classification '
+                                                                                                                'core '
+                                                                                                                'api).html#classificationmodelconfig.get_cls_model',
+                                                                                                                'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask': ( 'nucleus (classification core '
+                                                                                           'api).html#classificationtask',
+                                                                                           'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.__init__': ( 'nucleus (classification core '
+                                                                                                    'api).html#classificationtask.__init__',
+                                                                                                    'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.compute_model_logits': ( 'nucleus (classification '
+                                                                                                                'core '
+                                                                                                                'api).html#classificationtask.compute_model_logits',
+                                                                                                                'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.configure_optimizers': ( 'nucleus (classification '
+                                                                                                                'core '
+                                                                                                                'api).html#classificationtask.configure_optimizers',
+                                                                                                                'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.evaluation_step': ( 'nucleus (classification core '
+                                                                                                           'api).html#classificationtask.evaluation_step',
+                                                                                                           'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.forward': ( 'nucleus (classification core '
+                                                                                                   'api).html#classificationtask.forward',
+                                                                                                   'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.forward_loss': ( 'nucleus (classification core '
+                                                                                                        'api).html#classificationtask.forward_loss',
+                                                                                                        'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_evaluation_epoch_end': ( 'nucleus '
+                                                                                                                   '(classification core '
+                                                                                                                   'api).html#classificationtask.on_evaluation_epoch_end',
+                                                                                                                   'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_evaluation_epoch_start': ( 'nucleus '
+                                                                                                                     '(classification core '
+                                                                                                                     'api).html#classificationtask.on_evaluation_epoch_start',
+                                                                                                                     'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_test_epoch_end': ( 'nucleus (classification core '
+                                                                                                             'api).html#classificationtask.on_test_epoch_end',
+                                                                                                             'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_test_epoch_start': ( 'nucleus (classification '
+                                                                                                               'core '
+                                                                                                               'api).html#classificationtask.on_test_epoch_start',
+                                                                                                               'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_validation_epoch_end': ( 'nucleus '
+                                                                                                                   '(classification core '
+                                                                                                                   'api).html#classificationtask.on_validation_epoch_end',
+                                                                                                                   'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.on_validation_epoch_start': ( 'nucleus '
+                                                                                                                     '(classification core '
+                                                                                                                     'api).html#classificationtask.on_validation_epoch_start',
+                                                                                                                     'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.test_step': ( 'nucleus (classification core '
+                                                                                                     'api).html#classificationtask.test_step',
+                                                                                                     'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.training_step': ( 'nucleus (classification core '
+                                                                                                         'api).html#classificationtask.training_step',
+                                                                                                         'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.validation_step': ( 'nucleus (classification core '
+                                                                                                           'api).html#classificationtask.validation_step',
+                                                                                                           'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTaskConfig': ( 'nucleus (classification core '
+                                                                                                 'api).html#classificationtaskconfig',
+                                                                                                 'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.HuggingfaceModel': ( 'nucleus (classification core '
+                                                                                         'api).html#huggingfacemodel',
+                                                                                         'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.HuggingfaceModel.__init__': ( 'nucleus (classification core '
+                                                                                                  'api).html#huggingfacemodel.__init__',
+                                                                                                  'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.HuggingfaceModel.forward': ( 'nucleus (classification core '
+                                                                                                 'api).html#huggingfacemodel.forward',
+                                                                                                 'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.nn.Module.see_grad_norm': ( 'nucleus (classification core '
+                                                                                                'api).html#nn.module.see_grad_norm',
+                                                                                                'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.nn.Module.see_params_norm': ( 'nucleus (classification core '
+                                                                                                  'api).html#nn.module.see_params_norm',
+                                                                                                  'namable_classify/nucleus.py')}}}

@@ -1,0 +1,8 @@
+{
+    "username": "user",
+    "password": "user_password",
+    "host": "localhost",
+    "port": 5432,
+    "database_name": "namable_classify",
+    "postgres_protocol": "postgresql+psycopg2"
+}
