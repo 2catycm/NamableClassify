@@ -4,7 +4,7 @@ runs
 .lr*
 .scale_batch*
 lightning_logs
-data/
+/data/
 deprecated/
 _docs/
 _proc/
