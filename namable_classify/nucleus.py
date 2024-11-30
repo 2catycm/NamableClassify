@@ -95,6 +95,10 @@ def see_grad_norm(self:nn.Module)-> float:
     
 
 # %% ../nbs/01_nucleus (classification core api).ipynb 10
+from lightning.pytorch import loggers as pl_loggers
+from .help import runs_path
+
+# %% ../nbs/01_nucleus (classification core api).ipynb 12
 import lightning as L
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS, STEP_OUTPUT, OptimizerLRScheduler
 from overrides import override
@@ -102,11 +106,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from .utils import print_model_pretty
-from .utils import append_dict_list, ensure_array, logger
-from .metrics import compute_classification_metrics
+from .infra import print_model_pretty
+from .infra import append_dict_list, ensure_array, logger
+from .metrics import compute_classification_metrics, draw_classification_metrics
 import numpy as np
-from typing import Any
+from typing import Any, Optional
 class ClassificationTask(L.LightningModule):
     def __init__(self, config: ClassificationTaskConfig)->None:
         super().__init__()
@@ -124,7 +128,8 @@ class ClassificationTask(L.LightningModule):
         model_image_size:tuple[int, int] = self.lit_data.set_transform_from_hf_image_preprocessor(hf_image_preprocessor=self.cls_model.image_preprocessor)
         
         # model_image_size:tuple[int, int] = (self.cls_model.image_preprocessor.size['height'], self.cls_model.image_preprocessor.size['width'])
-        self.example_input_array = torch.Tensor(1, self.cls_model.backbone.config.num_channels, *model_image_size)
+        self.example_input_array = torch.randn((1, self.cls_model.backbone.config.num_channels, 
+                                                *model_image_size), requires_grad=True)
         self.dummy_inputs = dict(input_ids=self.example_input_array) # for opendelta and huggingface
         # self.dummy_inputs_is_correct = True # Used for boguan_yuequ (博观约取) 's auto opendelta 
         # 最后是训练策略
@@ -142,6 +147,9 @@ class ClassificationTask(L.LightningModule):
         
         # 上面初始化后config有变化，所以需要重新保存一下。
         self.save_hyperparameters(config.model_dump())
+        
+        # 之前的loss
+        self.previous_loss:Optional[float] = None
     
     # @override
     # def on_train_start(self) -> None:
@@ -171,6 +179,9 @@ class ClassificationTask(L.LightningModule):
         
         loss = self.forward_loss(*batch)
         self.log("train_loss", loss, prog_bar=True)
+        if self.previous_loss is not None:
+            self.log("train_loss_delta", float(loss) - self.previous_loss, prog_bar=True)
+        self.previous_loss = float(loss)
         # print("Loss:", loss.item())
         # self.manual_backward(loss)
         # loss.backward()
@@ -261,7 +272,29 @@ class ClassificationTask(L.LightningModule):
                                                 labels=labels)
         eval_dict = {f"{stage}_{k}": v for k,v in eval_dict.items()}
         self.log_dict(eval_dict)
+        # tensorboard 可视化
+        # draw_classification_metrics
+        figures, figure_names = draw_classification_metrics(all_label_tensor, all_pred_probs, 
+                                              logits_to_prob=True, 
+                                                labels=labels)
+        # TODO: bug
+        # tb_logger = self.get_logger_with_type(pl_loggers.TensorBoardLogger).experiment
+        tb_logger = self.trainer.loggers[0].experiment
+        for fig, name in zip(figures, figure_names):
+            tb_logger.add_figure(f"{stage}/{name}", fig, self.global_step)
+        # tb_logger.add_pr_curve(f"{stage}/pr_curve", all_label_tensor, all_pred_probs, self.global_step)
+        
+        
         self.evaluation_steps_outputs.clear()
+        
+    def get_logger_with_type(self, t:type = pl_loggers.TensorBoardLogger)->pl_loggers.Logger:
+        # Get tensorboard logger
+        target_logger = None
+        for logger in self.trainer.loggers:
+            if isinstance(logger, t):
+                target_logger = logger
+                break
+        return target_logger
 
     @override
     def on_validation_epoch_start(self):

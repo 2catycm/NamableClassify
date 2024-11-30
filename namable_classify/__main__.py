@@ -30,7 +30,7 @@ AutoYueQuAlgorithm(cls_task, config.yuequ)
 
 # %% ../nbs/05_main (example running script).ipynb 8
 import lightning as L
-from .utils import runs_path
+from .infra import runs_path
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.callbacks import ModelSummary, StochasticWeightAveraging, DeviceStatsMonitor, LearningRateMonitor, LearningRateFinder
 from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger, WandbLogger
@@ -87,7 +87,7 @@ print(lr_finder.results)
 
 fig = lr_finder.plot(suggest=True)
 from matplotlib import pyplot as plt
-from .utils import runs_figs_path
+from .infra import runs_figs_path
 plt.savefig(runs_figs_path/'lr_finder.png')
 # fig.show()
 new_lr = lr_finder.suggestion()

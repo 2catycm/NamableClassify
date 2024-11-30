@@ -19,7 +19,15 @@ d = { 'settings': { 'branch': 'main',
             'namable_classify.help': {},
             'namable_classify.infra': {},
             'namable_classify.metrics': { 'namable_classify.metrics.compute_classification_metrics': ( 'metrics.html#compute_classification_metrics',
-                                                                                                       'namable_classify/metrics.py')},
+                                                                                                       'namable_classify/metrics.py'),
+                                          'namable_classify.metrics.draw_classification_metrics': ( 'metrics.html#draw_classification_metrics',
+                                                                                                    'namable_classify/metrics.py'),
+                                          'namable_classify.metrics.get_top_bottom_k_classes': ( 'metrics.html#get_top_bottom_k_classes',
+                                                                                                 'namable_classify/metrics.py'),
+                                          'namable_classify.metrics.list_i_terms': ( 'metrics.html#list_i_terms',
+                                                                                     'namable_classify/metrics.py'),
+                                          'namable_classify.metrics.per_class_accuracy': ( 'metrics.html#per_class_accuracy',
+                                                                                           'namable_classify/metrics.py')},
             'namable_classify.nucleus': { 'namable_classify.nucleus.ClassificationModelConfig': ( 'nucleus (classification core '
                                                                                                   'api).html#classificationmodelconfig',
                                                                                                   'namable_classify/nucleus.py'),
@@ -50,6 +58,10 @@ d = { 'settings': { 'branch': 'main',
                                           'namable_classify.nucleus.ClassificationTask.forward_loss': ( 'nucleus (classification core '
                                                                                                         'api).html#classificationtask.forward_loss',
                                                                                                         'namable_classify/nucleus.py'),
+                                          'namable_classify.nucleus.ClassificationTask.get_logger_with_type': ( 'nucleus (classification '
+                                                                                                                'core '
+                                                                                                                'api).html#classificationtask.get_logger_with_type',
+                                                                                                                'namable_classify/nucleus.py'),
                                           'namable_classify.nucleus.ClassificationTask.on_evaluation_epoch_end': ( 'nucleus '
                                                                                                                    '(classification core '
                                                                                                                    'api).html#classificationtask.on_evaluation_epoch_end',

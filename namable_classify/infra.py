@@ -6,7 +6,7 @@
 __all__ = ['memory']
 
 # %% ../nbs/00_infra (utils reused among lib).ipynb 6
-from .help import *
+from .help import runs_path, lib_paths
 
 # %% ../nbs/00_infra (utils reused among lib).ipynb 8
 import joblib
