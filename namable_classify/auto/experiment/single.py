@@ -49,7 +49,8 @@ study = optuna.create_study(
     # study_name="peft baselines benchmark 11.3", 
     # study_name="peft baselines benchmark 11.7", 
     # study_name="peft baselines benchmark 11.30 wave_high_ladder", 
-    study_name="peft baselines benchmark 11.30 full_finetune", 
+    # study_name="peft baselines benchmark 11.30 full_finetune", 
+    study_name="peft baselines benchmark 11.30 full_finetune giant", 
     # storage=config.sqlalchemy_url, 
     storage=sqlite_url, 
     load_if_exists=True, 
@@ -70,7 +71,7 @@ study.set_user_attr("fixed_meta_parameters", fixed_meta_parameters.json())
 # 晚点再看
 # https://optuna-integration.readthedocs.io/en/stable/reference/generated/optuna_integration.MLflowCallback.html
 
-# %% ../../../nbs/04auto/exp_single.ipynb 11
+# %% ../../../nbs/04auto/exp_single.ipynb 12
 # full_finetune 和 新方法单列
 # 这里只跑baseline
 from boguan_yuequ.benchmarking import pe_list_tiny_for_all_size, backbone_names
@@ -92,7 +93,9 @@ def objective(trial, num_of_repeated_experiments = 5):
     # meta_parameters.yuequ = trial.suggest_categorical("yuequ", ["wave_high_ladder"])
     meta_parameters.yuequ = trial.suggest_categorical("yuequ", ["full_finetune"])
     # choice = trial.suggest_categorical("pe_and_backbone_choice", list(range(len(backbone_names))))
-    backbone_name = trial.suggest_categorical("backbone", backbone_names)
+    # backbone_name = trial.suggest_categorical("backbone", backbone_names)
+    backbone_name = trial.suggest_categorical("backbone", [backbone_names[-1]])
+    
     meta_parameters.cls_model_config.checkpoint = backbone_name
     meta_parameters.yuequ_pe = backbone_name2pe[backbone_name]
     trial.set_user_attr("parameter_efficiency", meta_parameters.yuequ_pe) # 用于后续分析实验结果
@@ -113,7 +116,8 @@ def objective(trial, num_of_repeated_experiments = 5):
         # 当我们选定 experiment_index 之后，就不要随机建议参数了，现在我们元参数保持一样，重复5次随机实验。
         try:
             val_result, test_result = run_with_config(
-                meta_parameters, trial, "val_acc1", "max"
+                meta_parameters, trial, "val_acc1", "max", 
+                batch_size=1, 
             )
         except Exception as e:
             logger.exception(e)
@@ -159,7 +163,7 @@ def objective(trial, num_of_repeated_experiments = 5):
     return result_dict["val_acc1-mean"]
     
 
-# %% ../../../nbs/04auto/exp_single.ipynb 12
+# %% ../../../nbs/04auto/exp_single.ipynb 13
 # study.optimize(objective, n_trials=100)
 study.optimize(lambda trial: objective(trial, num_of_repeated_experiments=1), 
                n_trials=100)

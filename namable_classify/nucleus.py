@@ -23,6 +23,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from transformers import AutoModel, AutoConfig, ViTModel, ViTConfig
 from transformers import AutoImageProcessor, BitImageProcessor, ViTImageProcessor
+from deepspeed.ops.adam import DeepSpeedCPUAdam
 
 class HuggingfaceModel(nn.Module):
     """Some Information about HuggingfaceModel"""
@@ -106,6 +107,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam 
+from deepspeed.ops.lamb import FusedLamb
+
 from .infra import print_model_pretty
 from .infra import append_dict_list, ensure_array, logger
 from .metrics import compute_classification_metrics, draw_classification_metrics
@@ -227,7 +231,9 @@ class ClassificationTask(L.LightningModule):
         # optimizer = optim.SGD(self.cls_model.parameters(), lr=self.hparams.learning_rate)
         # print(len(list(self.parameters())))
         
-        optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        # optimizer = optim.AdamW(self.parameters(), lr=self.hparams.learning_rate)
+        # optimizer = FusedLamb(self.parameters(), lr=self.hparams.learning_rate)
+        optimizer = DeepSpeedCPUAdam(self.parameters(), lr=self.hparams.learning_rate)
         # scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=self.hparams.learning_rate/10, 
         #                                               max_lr=self.hparams.learning_rate)
         # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.CosineAnnealingWarmRestarts.html
