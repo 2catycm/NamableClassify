@@ -12,6 +12,7 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
         'infra': [
             'PostgresDatabaseConfig',
             'auto_exp_runs_path',
+            'checkpoint_path',
             'database_config_path',
             'fixed_meta_parameters',
             'run_with_config',
@@ -47,8 +48,8 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
 )
 
 __all__ = ['PostgresDatabaseConfig', 'auto_exp_runs_path', 'backbone_name2pe',
-           'database_config_path', 'database_name', 'delta_to_try',
-           'fixed_meta_parameters', 'host', 'infra', 'mutiple', 'objective',
-           'password', 'peft_to_try', 'port', 'postgres_url',
+           'checkpoint_path', 'database_config_path', 'database_name',
+           'delta_to_try', 'fixed_meta_parameters', 'host', 'infra', 'mutiple',
+           'objective', 'password', 'peft_to_try', 'port', 'postgres_url',
            'run_with_config', 'single', 'sqlite_url', 'study', 'study_path',
            'study_results', 'username', 'yuequ_to_try']
